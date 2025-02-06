@@ -1,0 +1,163 @@
+// Velocidade do inimigo
+enemy_vel = 5;
+
+// Variáveis do tiro do inimigo
+enemy_first_tiro = 0;
+enemy_reload_tiro = 120;
+enemy_timer_tiro = 0;
+
+// Variáveis de vida e escudo
+enemy_hp = 50;  // Valor inicial de HP
+enemy_max_hp = 50;  // Máximo de HP
+enemy_shield = 3;
+
+// Variáveis de invulnerabilidade
+enemy_tempo_invul = game_get_speed(gamespeed_fps) * 3;
+enemy_timer_invul = 0;
+
+// Verificando sequência
+enemy_seq = in_sequence;
+
+// Função de controle do inimigo
+enemy_control = function()
+{
+	// Lógica para disparar o tiro
+	if (enemy_first_tiro <= 0 && enemy_timer_tiro <= 0)
+	{
+		shot1();
+		enemy_timer_tiro = enemy_reload_tiro;
+	} 
+	else 
+	{
+		enemy_first_tiro--;
+	}
+	
+	// Atualizando o timer de recarga do tiro
+	enemy_timer_tiro--;
+}
+
+// Função de disparo (5)
+shot1 = function()
+{
+	// Definindo os ângulos de disparo manualmente
+	var directions = [-30, -15, 0, 15, 30];
+
+	// Criando os tiros com base nos ângulos
+	for (var i = 0; i < 5; i++) 
+	{
+		var _tiro = instance_create_layer(x, y, "tiro01", obj_enemy_tiro03);
+		_tiro.speed = 8; 
+		_tiro.direction = 270 + directions[i];
+		_tiro.image_angle = _tiro.direction - 270;
+	}
+}
+
+// Função de disparo (25)
+shot25 = function()
+{
+	// Definindo os ângulos de disparo manualmente
+	var directions = 90;
+	tiros = 25
+	// Criando os tiros com base nos ângulos
+	repeat(tiros)
+	{
+		var _tiro = instance_create_layer(x, y, "tiro01", obj_enemy_tiro03);
+		_tiro.speed = 4; 
+		_tiro.direction = directions;
+		directions += 360/tiros;
+		_tiro.image_angle = _tiro.direction - 270;
+		
+	}
+}
+
+// Função de disparo teleguiado (2)
+shot2 = function()
+{
+
+	// Criando os tiros com base nos ângulos
+	for (var i = 0; i < 2; i++) 
+	{
+		// Ajustando a posição de disparo para os lados esquerdo e direito da sprite
+        var offset = (i == 0) ? -sprite_width / 2 : sprite_width / 2;
+		// Definindo os ângulos de disparo manualmente
+		var directions = point_direction(x,y,obj_nave01.x-offset,obj_nave01.y)
+		var _tiro = instance_create_layer(x+offset, y, "tiro01", obj_enemy_tiro02);
+		_tiro.speed = 8;
+		if(instance_exists(obj_nave01))
+		{
+		_tiro.direction = directions;
+		_tiro.image_angle = _tiro.direction-270;
+		}
+	}
+}
+
+//variaveis de movimentação
+estado = "chegando";
+tempo_carregando = game_get_speed(gamespeed_fps) * 3;
+timer_carregando = 0;
+
+// Comandos de movimentação
+mov_raid = function()
+{
+    switch(estado)
+    {
+        case "chegando":
+        {
+            if(y < 360)
+            {
+                vspeed = 3.2; // Movimento para baixo até a posição y = 360
+            }
+            else
+            {
+                estado = "carregando"; // Muda para o estado de carregamento
+            }
+        }
+        break;
+        
+        case "carregando":
+        {
+            vspeed = 0; // Para o movimento no eixo Y enquanto carrega
+            timer_carregando++; // Incrementa o tempo de carregamento
+            if(timer_carregando >= tempo_carregando)
+            {
+                estado = choose("atirando","atirando2"); // Se o tempo de carregamento atingir o limite, vai para o estado "atirando"
+                timer_carregando = 0; // Reseta o contador de tempo de carregamento
+            }
+        }
+        break;
+        
+        case "atirando":
+        {
+            if(enemy_max_hp < (enemy_hp * 2))
+            {
+                shot2();  // Dispara o segundo tipo de tiro
+                estado = "carregando"; // Volta para o estado de carregamento
+                timer_carregando = 0; // Reseta o contador de tempo de carregamento
+            }
+            else
+            {
+                shot25();  // Dispara o segundo tipo de tiro
+                estado = "carregando"; // Volta para o estado de carregamento
+                timer_carregando = 0; // Diminui o tempo de carregamento
+            }
+        }
+        break; // Quebra o "case" e sai do switch
+		
+		case "atirando2":
+        {
+            if(enemy_max_hp < (enemy_hp * 2))
+            {
+                shot1();  // Dispara o segundo tipo de tiro
+                estado = "carregando"; // Volta para o estado de carregamento
+                timer_carregando = 0; // Reseta o contador de tempo de carregamento
+            }
+            else
+            {
+                shot25();  // Dispara o segundo tipo de tiro
+                estado = "carregando"; // Volta para o estado de carregamento
+                timer_carregando = 0; // Diminui o tempo de carregamento
+            }
+        }
+        break; // Quebra o "case" e sai do switch
+    }
+}
